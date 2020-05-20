@@ -39,7 +39,8 @@ def findPirateSite():
 def main(args):
 
     chromeOptions = Options()
-    chromeOptions.add_argument("--disable-logging")
+    chromeOptions.add_argument('--headless')
+    chromeOptions.add_argument('--disable-gpu')
     chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome("C:\\Program Files (x86)\\chromedriver.exe", options=chromeOptions)
     # Finds a functional piratebay site
@@ -124,7 +125,7 @@ def main(args):
         pass
 
     try:
-        print("\nFile List: \n")
+        print("\n\nFile List: \n")
         for i in range(0, len(fileNames)):
             print(fileNames[i].getText(), "\t\t\t", fileSizes[i].getText())
     except:
@@ -132,7 +133,7 @@ def main(args):
     
     driver.quit()
     
-    webbrowser.open(magnetLinks[userInput-1])
+    # webbrowser.open(magnetLinks[userInput-1].get('href'))
 
 
 if __name__ == "__main__":
