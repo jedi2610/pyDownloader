@@ -40,6 +40,7 @@ def main(args):
 
     chromeOptions = Options()
     chromeOptions.add_argument('--headless')
+    chromeOptions.add_argument('--disable-extensions')
     chromeOptions.add_argument('--disable-gpu')
     chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
     driver = webdriver.Chrome("C:\\Program Files (x86)\\chromedriver.exe", options=chromeOptions)
@@ -54,7 +55,6 @@ def main(args):
 
     types = ["all", "audio", "video", "apps", "games", "other"]
     parameters = {}
-    # os.system("cls")
 
     # URL encoding and finding the URL of the final page
     for i in types:
@@ -85,14 +85,6 @@ def main(args):
     seeders = soup.select('.item-seed')
     leechers = soup.select('.item-leech')
     magnetLinks = soup.select('.item-icons > a')
-    
-    tableRows = [None] * (totEntries + 1)
-    for i in range(0, totEntries+1):
-        tableRow = [i, typeOfMedia[i].getText(), nameOfMedia[i].getText(), uploadDate[i].getText(),
-                    sizeOfMedia[i].getText(), uploadedBy[i].getText(), seeders[i].getText(), leechers[i].getText()]
-        tableRows[i] = tableRow
-    tableRows.pop(0)
-
 
     tableHeader = ["S.No", "Category", "Name",
                    "Upload Date", "Size", "ULed by", "SE", "LE"]
@@ -101,12 +93,14 @@ def main(args):
     table.hrules = ALL
     table.padding_width = 4
 
-    for tableRow in tableRows:
-        table.add_row(tableRow)
+    for i in range(0, totEntries+1):
+        table.add_row([i, typeOfMedia[i].getText(), nameOfMedia[i].getText(), uploadDate[i].getText(),
+                    sizeOfMedia[i].getText(), uploadedBy[i].getText(), seeders[i].getText(), leechers[i].getText()])
 
+    table.del_row(0)
     print(table)
 
-    userInput = int(input("\nWhich one do you wanna download? (enter 0 to exit)> "))
+    userInput = int(input("\nWhich torrent do you wanna download? (0 to exit)> "))
     if 0 < userInput <= 100:
         path = nameOfMedia[userInput].a.get('href')
         finalUrl = "https://" + domain + path
@@ -120,14 +114,17 @@ def main(args):
     fileSizes = soup.select('.file-size')
 
     try:
-        print("\n", "Description of the media: \n\n", descriptionText[0].getText())
+        print('\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+        print("\n", "Description of the torrent: \n\n", descriptionText[0].getText())
     except:
         pass
 
     try:
-        print("\n\nFile List: \n")
+        print('\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
+        print("\nList of files included in the torrent: \n")
+        maxLen = max([len(fileName.getText()) for fileName in fileNames])
         for i in range(0, len(fileNames)):
-            print(fileNames[i].getText(), "\t\t\t", fileSizes[i].getText())
+            print(fileNames[i].getText().ljust(maxLen, " "), "\t", fileSizes[i].getText())
     except:
         pass
     
