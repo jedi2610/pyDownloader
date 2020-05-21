@@ -1,13 +1,18 @@
 import urllib.parse
 import webbrowser
-import os
 import argparse
 import requests
+import logging
+import sys
+import os
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from prettytable import *
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.common.exceptions import InvalidArgumentException
 from selenium.webdriver.chrome.options import Options
+
+os.environ['WDM_LOG_LEVEL'] = '20'
 
 
 def findPirateSite():
@@ -20,7 +25,7 @@ def findPirateSite():
         siteList = requests.get("https://piratebay-proxylist.net")
         siteList.raise_for_status()
     except Exception as e:
-        print(e)
+        print(e ,)
         exit(0)
 
     # Obtain the URL of the working piratebay site
@@ -38,12 +43,14 @@ def findPirateSite():
 
 def main(args):
 
+    os.environ['WDM_LOG_LEVEL'] = '30'
     chromeOptions = Options()
     chromeOptions.add_argument('--headless')
     chromeOptions.add_argument('--disable-extensions')
     chromeOptions.add_argument('--disable-gpu')
     chromeOptions.add_experimental_option('excludeSwitches', ['enable-logging'])
-    driver = webdriver.Chrome("C:\\Program Files (x86)\\chromedriver.exe", options=chromeOptions)
+    # driver = webdriver.Chrome("C:\\Program Files (x86)\\chromedriver.exe", options=chromeOptions)
+    driver = webdriver.Chrome(ChromeDriverManager().install(), options=chromeOptions)
     # Finds a functional piratebay site
     domain = findPirateSite()
 
