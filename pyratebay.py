@@ -16,6 +16,7 @@ os.environ['WDM_LOG_LEVEL'] = '20'
 
 
 def print_banner():
+    # Print banner
     print("""
                                                                                                          __                       _______                      
                                                                                                         /  |                     /       \                     
@@ -34,6 +35,7 @@ def print_banner():
 
 def initialize_driver():
 
+    # Initializing WebDriver
     os.environ['WDM_LOG_LEVEL'] = '0'
     chromeOptions = Options()
     chromeOptions.add_argument('--headless')
@@ -52,6 +54,7 @@ def initialize_driver():
 
 def resize_screen():
 
+    # Resizing and clearing the screen
     pl = sys.platform
     if pl == 'win32':
         os.system("cls")
@@ -97,8 +100,11 @@ def findPirateSite(driver, isDebug):
 
 def processFinalPage(driver, domain, mediaName, parameters, isDebug):
 
+    # Processing data from the pirate site
+
     if isDebug:
         print('Inside processFinalPage() function')
+    # Encoding the query
     query = urllib.parse.quote_plus(mediaName)
     finalUrl = "https://{0}/search.php?q={1}".format(domain, query)
     for key, value in parameters.items():
@@ -114,6 +120,7 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
     soup = BeautifulSoup(driver.page_source, features='lxml')
     totEntries = len(soup.select('.list-entry'))
 
+    # Scraping all kinds of data from the website
     typeOfMedia = soup.select('.item-type')
     nameOfMedia = soup.select('.item-name')
     uploadDate = soup.select('.item-uploaded')
@@ -123,6 +130,7 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
     leechers = soup.select('.item-leech')
     magnetLinks = soup.select('.item-icons > a')
 
+    # Initializing PrettyTable with all the table headers and tweak some settings
     tableHeader = ["S.No", "Category", "Name",
                    "Upload Date", "Size", "ULed by", "SE", "LE"]
     table = PrettyTable(tableHeader)
@@ -131,6 +139,7 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
     table.padding_width = 4
 
     try:
+        # Adding all the data to the table
         for i in range(0, totEntries + 1):
             table.add_row([i, typeOfMedia[i].getText(), nameOfMedia[i].getText(), uploadDate[i].getText(
             ), sizeOfMedia[i].getText(), uploadedBy[i].getText(), seeders[i].getText(), leechers[i].getText()])
@@ -139,11 +148,13 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
             print(f'Error while scraping data from {domain}')
         return None
 
+    # Deleting row 1 as it's just the table header scraped from the site
     table.del_row(0)
     print("\n\n")
     print(table)
 
     try:
+        # Getting user input on which torrent to download
         userInput = int(
             input("\nWhich torrent do you wanna download? (0 to exit) > "))
     except ValueError:
@@ -167,7 +178,7 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
 
     try:
         print('\n----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------')
-        print("\n", "Description of the torrent: \n\n",
+        print("\nDescription of the torrent: \n\n",
               descriptionText[0].getText())
     except:
         pass
@@ -187,10 +198,18 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
 
 def main(args):
 
+    # Driver code
     isDebug = args.debug
+
+    # Initializing Chrome WebDriver
     driver = initialize_driver()
+
+    # Clearing and resizing screen
     resize_screen()
+
+    # Scraping data to find all working websites
     domains = findPirateSite(driver, isDebug)
+
     if isDebug:
         print('List of domains:', ', '.join(domains))
         print('Total working domains:', len(domains))
@@ -199,6 +218,8 @@ def main(args):
     category = args.category
     types = ["all", "audio", "video", "apps", "games", "other"]
     parameters = {}
+
+    # Updating parameters
     for i in types:
         if i in category:
             parameters.update({i: "on"})
@@ -211,17 +232,25 @@ def main(args):
         if magnetLink is not None:
             break
 
-        if domain == domains[-1]:
-            print("Oops!, couldn't find any working sites for your country.")
+    if domain == domains[-1]:
+        print("Oops!, couldn't find any working sites for your country.")
 
-    # webbrowser.open(magnetLink)
+    # Opening magnet link
+    webbrowser.open(magnetLink)
     if isDebug:
         print(magnetLink)
+
     driver.quit()
 
 
 if __name__ == "__main__":
 
+    # TODO:
+    # Add support for multiplefiledownloads
+    # Add support to view the description of file before downloading
+    # Auto exit if no files are found
+
+    # Parse command line arguments
     parser = argparse.ArgumentParser()
     parser.add_argument('query', nargs='+', type=str,
                         metavar='query', help="Name of the media to download")
