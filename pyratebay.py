@@ -153,6 +153,12 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
     print("\n\n")
     print(table)
 
+    # Auto exit if no torrent is found
+    if nameOfMedia[1].getText().strip() == 'No results returned':
+        print("\n")
+        driver.quit()
+        exit(0)
+
     try:
         # Getting user input on which torrent to download
         userInput = int(
@@ -248,7 +254,6 @@ if __name__ == "__main__":
     # TODO:
     # Add support for multiplefiledownloads
     # Add support to view the description of file before downloading
-    # Auto exit if no files are found
 
     # Parse command line arguments
     parser = argparse.ArgumentParser()
