@@ -60,20 +60,17 @@ def initialize_driver(browser, isDebug):
     elif pl == 'linux' or pl == 'linux2' or pl == 'darwin':
         # https://askubuntu.com/questions/1075103/chromium-config-folder-is-missing-in-ubuntu-18-04
         # https://stackoverflow.com/questions/50761757/selenium-headless-chromedriver-fails-with-connectionreseterror-errno-104-conn
-        USER = subprocess.check_output('whoami').decode('utf-8').strip()
         if browser == "chrome":
             chromeOptions.binary_location = '/usr/bin/google-chrome'
         else:
             # if chromium is installed using snap
+            chromeOptions.add_argument("user-data-dir=.config/chromium")
+
             if "snap" in str(subprocess.check_output(["which", "chromium"])):
                 chromeOptions.binary_location = '/snap/bin/chromium'
-                chromeOptions.add_argument(
-                    "user-data-dir=snap/chromium/current/.config")
             else:
                 # if chromium is installed using from source or deb package
                 chromeOptions.binary_location = '/usr/bin/chromium-browser'
-                chromeOptions.add_argument(
-                    "user-data-dir=.config/chromium")
 
     if browser == "chrome":
         try:
