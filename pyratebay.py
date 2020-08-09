@@ -48,8 +48,8 @@ def initialize_driver(browser, isDebug):
     chromeOptions.add_argument('--headless')
     chromeOptions.add_argument('--disable-extensions')
     chromeOptions.add_argument('--disable-gpu')
-    chromeOptions.add_argument('--no-sandbox')
-    chromeOptions.add_argument('--disable-dev-shm-usage')
+    # chromeOptions.add_argument('--disable-dev-shm-usage')
+    # incase user runs in a headed mode
     chromeOptions.add_argument('disable-infobars')
 
     if pl == 'win32':
@@ -65,6 +65,8 @@ def initialize_driver(browser, isDebug):
         else:
             # if chromium is installed using snap
             chromeOptions.add_argument("user-data-dir=.config/chromium")
+            # Not recommended to run in no-sandbox mode
+            # chromeOptions.add_argument('--no-sandbox')
 
             if "snap" in str(subprocess.check_output(["which", "chromium"])):
                 chromeOptions.binary_location = '/snap/bin/chromium'
@@ -149,6 +151,9 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
     for key, value in parameters.items():
         finalUrl += f'&{key}={value}'
 
+    if isDebug:
+        print(finalUrl)
+
     try:
         driver.get(finalUrl)
     except InvalidArgumentException as e:
@@ -219,6 +224,9 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
         print('Not a valid option')
         driver.quit()
         exit(0)
+
+    if isDebug:
+        print(finalUrl)
 
     driver.get(finalUrl)
     soup = BeautifulSoup(driver.page_source, features='lxml')
