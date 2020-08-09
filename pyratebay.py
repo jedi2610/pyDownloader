@@ -1,26 +1,27 @@
 import urllib.parse
 import webbrowser
+import subprocess
 import argparse
 import requests
 import logging
 import sys
 import os
+
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from prettytable import *
 from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.utils import ChromeType
 from selenium.common.exceptions import InvalidArgumentException, WebDriverException
 from selenium.webdriver.chrome.options import Options
-
-os.environ['WDM_LOG_LEVEL'] = '20'
 
 
 def print_banner():
     # Print banner
     print("""
-                                                                                                         __                       _______                      
-                                                                                                        /  |                     /       \                     
-                                                                 ______   __    __   ______   ______   _$$ |_     ______         $$$$$$$  |  ______   __    __ 
+                                                                                                         __                       _______
+                                                                                                        /  |                     /       \
+                                                                 ______   __    __   ______   ______   _$$ |_     ______         $$$$$$$  |  ______   __    __
                                                                 /      \ /  |  /  | /      \ /      \ / $$   |   /      \        $$ |__$$ | /      \ /  |  /  |
                                                                 /$$$$$$  |$$ |  $$ |/$$$$$$  |$$$$$$  |$$$$$$/   /$$$$$$  |      $$    $$<  $$$$$$  |$$ |  $$ |
                                                                 $$ |  $$ |$$ |  $$ |$$ |  $$/ /    $$ |  $$ | __ $$    $$ |      $$$$$$$  | /    $$ |$$ |  $$ |
@@ -28,27 +29,68 @@ def print_banner():
                                                                 $$    $$/ $$    $$ |$$ |     $$    $$ |  $$  $$/ $$       |      $$    $$/ $$    $$ |$$    $$ |
                                                                 $$$$$$$/   $$$$$$$ |$$/       $$$$$$$/    $$$$/   $$$$$$$/       $$$$$$$/   $$$$$$$/  $$$$$$$ |
                                                                 $$ |      /  \__$$ |                                                                 /  \__$$ |
-                                                                $$ |      $$    $$/                                                                  $$    $$/ 
-                                                                $$/        $$$$$$/                                                                    $$$$$$/  
+                                                                $$ |      $$    $$/                                                                  $$    $$/
+                                                                $$/        $$$$$$/                                                                    $$$$$$/
     """)
 
 
-def initialize_driver():
+def initialize_driver(browser, isDebug):
 
     # Initializing WebDriver
-    os.environ['WDM_LOG_LEVEL'] = '0'
+    if not isDebug:
+        os.environ['WDM_LOG_LEVEL'] = '0'
+
+    pl = sys.platform
+    if isDebug:
+        print("System Platform:", pl)
+
     chromeOptions = Options()
     chromeOptions.add_argument('--headless')
     chromeOptions.add_argument('--disable-extensions')
     chromeOptions.add_argument('--disable-gpu')
-    chromeOptions.add_experimental_option(
-        'excludeSwitches', ['enable-logging'])
-    try:
-        driver = webdriver.Chrome(
-            ChromeDriverManager().install(), options=chromeOptions)
-    except WebDriverException:
-        print("Chrome app is unresponsive.")
-        exit(0)
+    chromeOptions.add_argument('--no-sandbox')
+    chromeOptions.add_argument('--disable-dev-shm-usage')
+    chromeOptions.add_argument('disable-infobars')
+
+    if pl == 'win32':
+        # Disable logging
+        chromeOptions.add_experimental_option(
+            'excludeSwitches', ['enable-logging'])
+
+    elif pl == 'linux' or pl == 'linux2' or pl == 'darwin':
+        # https://askubuntu.com/questions/1075103/chromium-config-folder-is-missing-in-ubuntu-18-04
+        # https://stackoverflow.com/questions/50761757/selenium-headless-chromedriver-fails-with-connectionreseterror-errno-104-conn
+        USER = subprocess.check_output('whoami').decode('utf-8').strip()
+        if browser == "chrome":
+            chromeOptions.binary_location = '/usr/bin/google-chrome'
+        else:
+            # if chromium is installed using snap
+            if "snap" in str(subprocess.check_output(["which", "chromium"])):
+                chromeOptions.binary_location = '/snap/bin/chromium'
+                chromeOptions.add_argument(
+                    "user-data-dir=snap/chromium/current/.config")
+            else:
+                # if chromium is installed using from source or deb package
+                chromeOptions.binary_location = '/usr/bin/chromium-browser'
+                chromeOptions.add_argument(
+                    "user-data-dir=.config/chromium")
+
+    if browser == "chrome":
+        try:
+            driver = webdriver.Chrome(
+                ChromeDriverManager().install(), options=chromeOptions)
+        except WebDriverException:
+            print("Chrome app is unresponsive.")
+            exit(1)
+
+    else:
+        try:
+            driver = webdriver.Chrome(
+                ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install(), options=chromeOptions)
+        except WebDriverException:
+            print("Chromium app is upresponsive.")
+            exit(1)
+
     return driver
 
 
@@ -61,7 +103,7 @@ def resize_screen():
         os.system("mode 500")
     elif pl == 'linux' or pl == 'linux2' or pl == 'darwin':
         os.system("clear")
-        os.system("resize -s 300 300")
+        # os.system("resize -s 300 300")
     print_banner()
 
 
@@ -168,7 +210,12 @@ def processFinalPage(driver, domain, mediaName, parameters, isDebug):
         driver.quit()
         exit(0)
 
-    if 0 < userInput <= 100:
+    if 0 <= userInput <= 100:
+        if userInput == 0:
+            print("Cleaning up...")
+            driver.quit()
+            print("Exiting")
+            exit(0)
         path = nameOfMedia[userInput].a.get('href')
         finalUrl = "https://" + domain + path
     else:
@@ -206,9 +253,11 @@ def main(args):
 
     # Driver code
     isDebug = args.debug
-
+    if isDebug:
+        print("Searching for:", ''.join(args.query))
+        print("Browser Type:", args.browser)
     # Initializing Chrome WebDriver
-    driver = initialize_driver()
+    driver = initialize_driver(args.browser, isDebug)
 
     # Clearing and resizing screen
     resize_screen()
@@ -241,11 +290,11 @@ def main(args):
     if domain == domains[-1]:
         print("Oops!, couldn't find any working sites for your country.")
 
-    # Opening magnet link
-    webbrowser.open(magnetLink)
     if isDebug:
         print(magnetLink)
 
+    # Opening magnet link
+    webbrowser.open(magnetLink)
     driver.quit()
 
 
@@ -263,6 +312,8 @@ if __name__ == "__main__":
                         "all", "audio", "video", "apps", "games", "other"], nargs='*', dest='category', type=str, help="Searches for the given 'name' in the specified category (default = all)")
     parser.add_argument('-d', '--debug', dest='debug',
                         action='store_true', help="Prints debug messages")
+    parser.add_argument('-b', '--browser', dest='browser', choices=[
+                        "chrome", "chromium"], default="chrome", help='Specifiy the browser to use')
     args = parser.parse_args()
 
     main(args)
