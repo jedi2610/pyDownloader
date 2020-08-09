@@ -1,6 +1,7 @@
 import urllib.parse
 import webbrowser
 import subprocess
+import pyperclip
 import argparse
 import requests
 import logging
@@ -297,6 +298,9 @@ def main(args):
 
     if isDebug:
         print(magnetLink)
+
+    pyperclip.copy(magnetLink)
+    print("Magnet Link copied to clipboard. Use the clipboard if the torrent doesn't open.")
 
     # Opening magnet link
     webbrowser.open(magnetLink)
