@@ -14,6 +14,7 @@
 ## Requirements
 
 Any of the following browsers:
+
 - Chrome (Supports headless mode)
 - Firefox
 - Internet Explorer
@@ -35,9 +36,9 @@ optional arguments:
                         category (default = all)
 ```
 
-## Form a developer standpoint
+## From a developer standpoint
 
-The newly updated pirate bay sites work differently. It fetches the data only after loading the webpage. The table is dynamically populated by JavaScript, this makes it impossible to scrape the data of the webpage using the normal `requests` or `urllib` module as it only returns a basic HTML content of the webpage without any table and other stuff. To overcome this problem, one should let the webpage load first and then scrape the contents of the webpage using the `selenium` or `bs4` modules. This way scraping the web is known as dynamic web scraping, which is indeed implemented in this program.
+The newly updated pirate bay sites work differently. It fetches the data only after loading the webpage. The table is dynamically populated by JavaScript, this makes it impossible to scrape the data of the webpage using the normal `requests` or `urllib` module as it only returns a basic HTML content of the webpage without any table and other stuff. To overcome this problem, one should let the webpage load first and then scrape the contents of the webpage using the `selenium` or `bs4` modules. This way of scraping the web is known as dynamic web scraping, which is indeed implemented in this program.
 
 <br>
 
